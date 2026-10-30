@@ -1,0 +1,53 @@
+# @package _global_
+# SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Modifications Copyright Amazon.com, Inc. or its affiliates.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ScanNet++ DSLR: native OPENCV_FISHEYE at half resolution (resized_images_2/).
+defaults:
+  - /base_gs
+  - /dataset: scannetpp_fisheye
+  - /initialization: colmap
+  - /render: 3dgut
+  - _self_
+  - /geometry: null  # + Geometry Objective: geometry=sof
+
+seed_initialization: 42
+dataset:
+  downsample_factor: 2
+  camera_sampler_seed: 770042
+  camera_domains: [scannetpp.json]  # angular caps of the released calibrations
+post_processing:
+  # Wide-Angle Appearance Modeling: PPISP with 50 radial knots and a 50x50 flat-field grid per camera.
+  radial_attenuation_knots: 50
+  flatfield_grid: 50
+# ScanNet++ recipe: CoMe confidence loss and normal variance.
+loss:
+  # CoMe confidence loss: per-Gaussian confidence weights the photometric residuals
+  # from step 500, with -beta * log C; requires the confidence renderer channel.
+  color_confidence: true
+  color_confidence_beta: 0.075
+  color_confidence_from_iter: 500
+  color_confidence_min: 0.001
+  color_confidence_max: 5.0
+  # CoMe normal variance.
+  lambda_normal_variance: 0.005
+  normal_variance_warmup: 15000
+optimizer:
+  params:
+    confidence:
+      lr: 0.00025
+strategy:
+  prune_big:
+    extent: sof_max_radius  # SOF's camera extent for the world-size prune (see configs/strategy/gs.yaml)

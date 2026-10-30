@@ -1,0 +1,61 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Modifications Copyright Amazon.com, Inc. or its affiliates.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gofish"
+version = "1.0.0"
+description = "GOFish: Full Field-of-View Gaussian Splatting and Mesh Extraction"
+requires-python = ">=3.11"
+dependencies = [
+    "torch>=2.4",
+    "torchvision",
+    "torchmetrics",
+    "hydra-core>=1.3",
+    "omegaconf",
+    "numpy",
+    "pillow",
+    "scikit-learn",
+    "addict",
+    "rich",
+    "piexif",
+    "tensorboard",
+    "ninja",
+    "slangtorch>=1.3",
+    "nvidia-ncore>=19",
+]
+
+[project.optional-dependencies]
+# Evaluation (gofish/eval/) and mesh evaluation protocols.
+eval = [
+    "opencv-python",
+    "open3d>=0.18",
+    "scipy",
+    "trimesh",
+    "matplotlib",
+    "pye57",
+]
+
+# Install editable, `pip install -e .`: train.py, render.py, mesh.py and configs/ run from the
+# repository, and the CUDA sources are compiled on first use from the package directories.
+[tool.setuptools.packages.find]
+include = ["gofish*", "threedgrut*", "threedgut_tracer*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.yaml", "*.json", "*.txt", "*.cu", "*.cuh", "*.h", "*.hpp", "*.inl", "*.cpp", "*.slang"]

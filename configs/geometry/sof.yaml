@@ -1,0 +1,11 @@
+# @package _global_
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: CC-BY-NC-4.0
+# + Geometry Objective: SOF's geometry losses on calibrated rays.
+#     python train.py --config-name apps/fiord geometry=sof path=... out_dir=...
+loss:
+  lambda_distortion: 100.0  # inverse-depth distortion
+  lambda_dnc: 0.05  # depth-normal consistency
+  lambda_esmooth: 0.01  # edge-aware normal smoothness
+  lambda_opa: 0.004  # opacity-field supervision at the surface crossing
+  lambda_extent: 0.1  # world-unit along-ray extent

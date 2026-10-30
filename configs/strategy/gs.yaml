@@ -1,0 +1,55 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Modifications Copyright Amazon.com, Inc. or its affiliates.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+method: GSStrategy
+print_stats: true
+
+densify:
+  start_iteration: 500
+  end_iteration: 15000
+  frequency: 100
+  clone_grad_threshold: 0.0002
+  split_grad_threshold: 0.0002
+  # AbsGS absolute-gradient OR-gate (quantile matched to the signed fraction).
+  abs_grad: true
+  # Camera-native image-space gradient (Jacobian pseudo-inverse) for fisheye
+  # cameras; false uses the stock 3DGUT world-gradient statistic.
+  generic_camera_absgrad: true
+  relative_size_threshold: 0.01  # larger Gaussians are split, smaller ones cloned
+  split:
+    n_gaussians: 2
+
+prune:
+  frequency: 100
+  start_iteration: 500
+  end_iteration: 15000
+  density_threshold: 0.05
+
+# SOF world-size prune after the first opacity reset: remove Gaussians whose
+# largest scale exceeds scale_threshold x extent. extent:
+#   median          1.1 x the median distance of the training cameras from
+#                   their coordinatewise-median centre (the trainer's scene extent);
+#   sof_max_radius  SOF's extent: 1.1 x the largest distance of the training
+#                   cameras from their mean (used on ScanNet++).
+prune_big:
+  enabled: true
+  scale_threshold: 0.1
+  extent: median
+
+reset_density:
+  frequency: 3000
+  start_iteration: 0
+  end_iteration: 15000
+  new_max_density: 0.01

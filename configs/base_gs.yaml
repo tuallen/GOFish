@@ -1,0 +1,134 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Modifications Copyright Amazon.com, Inc. or its affiliates.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+defaults:
+  - _self_
+  - /strategy: gs
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+
+path: ???
+seed_initialization: 1234  # seed for random / numpy / torch
+experiment_name: ""
+out_dir: "./runs"
+n_iterations: 35000  # 30k joint scene + PPISP steps, then 5k controller-only steps
+val_frequency: 0  # validation every N steps; 0 disables it
+num_workers: 24
+log_frequency: 100  # TensorBoard scalars every N steps
+enable_frame_timings: false
+
+enable_writer: true
+
+model:
+  density_activation: sigmoid
+  scale_activation: exp
+  default_density: 0.1
+  default_scale_factor: 1.0
+  optimize_density: true
+  optimize_features_albedo: true
+  optimize_features_specular: true
+  optimize_position: true
+  optimize_rotation: true
+  optimize_scale: true
+  bvh_update_frequency: 1
+  feature_type: sh
+  progressive_training:
+    init_n_features: 0  # initial SH degree
+    max_n_features: 3  # final SH degree
+    increase_frequency: 1000
+    increase_step: 1
+  background:
+    name: background-color
+    color: black
+  print_stats: true
+
+# Step 30000 is the geometry checkpoint (meshing), step 35000 the rendering checkpoint;
+# the geometry checkpoint is saved for any n_iterations. A save before the scene
+# freezes refreshes the Mip filter, so the steps 650 and 15000 are part of the recipe.
+checkpoint:
+  iterations: [650, 15000, 30000, 35000]
+
+optimizer:
+  type: adam
+  lr: 0.0
+  eps: 1.0e-15
+  params:
+    positions:
+      lr: 0.00016
+    density:
+      lr: 0.05
+    features_albedo:
+      lr: 0.0025
+    features_specular:
+      lr: 0.000125
+    rotation:
+      lr: 0.001
+    scale:
+      lr: 0.005
+
+# Scene schedulers run on the 30k scene clock.
+scheduler:
+  positions:
+    type: exp
+    lr_init: 0.00016
+    lr_final: 1.6e-06
+    max_steps: 30000
+  density:
+    type: skip
+
+loss:
+  use_l1: true
+  lambda_l1: 0.8
+  use_l2: false
+  lambda_l2: 1.0
+  use_ssim: true
+  lambda_ssim: 0.2
+  # Geometry Objective (SOF): off in GOFish. `geometry=sof` sets the
+  # five weights of the + Geometry Objective variant, see configs/geometry/sof.yaml.
+  lambda_distortion: 0.0  # inverse-depth distortion
+  lambda_dnc: 0.0  # depth-normal consistency
+  lambda_esmooth: 0.0  # edge-aware normal smoothness
+  lambda_opa: 0.0  # opacity-field supervision at the surface crossing
+  lambda_extent: 0.0  # world-unit along-ray extent
+  geom_warmup: 15000  # distortion / opacity / extent start step
+  dnc_warmup: 15000  # depth-normal / smoothness start step
+  dist_near: 0.2  # distortion near plane
+  dist_far: 100.0  # distortion far plane
+  # CoMe confidence loss and normal variance (enabled on ScanNet++ only).
+  color_confidence: false
+  color_confidence_beta: 0.075
+  color_confidence_from_iter: 500
+  color_confidence_min: 0.001
+  color_confidence_max: 5.0
+  lambda_normal_variance: 0.0
+  normal_variance_warmup: 15000
+  grad_clip: 0.0
+
+post_processing:
+  method: ppisp
+  use_controller: true
+  n_distillation_steps: 5000  # controller-only steps after the scene clock
+  # Wide-Angle Appearance Modeling: W = w(rho) exp(-a(u)), a per-camera nonincreasing radial profile
+  # (knots over [rho_ap/2, rho_ap]) times a flat-field log-attenuation grid (cells per max(W, H)).
+  # 0 disables W (W = 1), e.g. pinhole cameras.
+  radial_attenuation_knots: 0
+  flatfield_grid: 0
+
+hydra:
+  output_subdir: null
+  job:
+    chdir: false
+  run:
+    dir: .

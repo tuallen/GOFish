@@ -1,0 +1,43 @@
+# @package _global_
+# SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Modifications Copyright Amazon.com, Inc. or its affiliates.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# FullCircle: Insta360 X4 dual fisheye of about 205 degrees, COLMAP OPENCV_FISHEYE, images_4/
+# at 720 x 720, prepared by gofish.data.fullcircle.  The tripod test frames are held
+# out through dataset.test_list; every other registered frame trains.
+defaults:
+  - /base_gs
+  - /dataset: colmap
+  - /initialization: colmap
+  - /render: 3dgut
+  - _self_
+  - /geometry: null  # + Geometry Objective: geometry=sof
+
+seed_initialization: 1234
+dataset:
+  downsample_factor: 4
+  camera_sampler_seed: 771234
+  # No measured aperture: each lens is supported on the first monotone branch of
+  # its calibrated distortion polynomial.
+  camera_domains: []
+  test_list: ${path}/test_list.txt
+post_processing:
+  # Wide-Angle Appearance Modeling: PPISP with 50 radial knots and a 50x50 flat-field grid per camera.
+  radial_attenuation_knots: 50
+  flatfield_grid: 50
+render:
+  # Test renders: numpy.rint PNG quantization and rgb * (W_r * W_ff), see configs/render/3dgut.yaml.
+  png_rounding: half_even
+  wa_order: product

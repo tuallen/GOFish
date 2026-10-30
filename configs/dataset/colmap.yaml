@@ -1,0 +1,25 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Modifications Copyright Amazon.com, Inc. or its affiliates.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+type: colmap
+downsample_factor: 1  # reads images_<factor>/ (or images_<factor>_png/)
+test_split_interval: 8  # every 8th frame is held out
+test_list: null  # or a file of held-out COLMAP image names, which replaces the interval
+camera_sampler_seed: 0  # dedicated seed of the training-view shuffle
+load_exif: true  # EXIF exposure prior for PPISP
+# Calibrated camera domains: JSON tables in gofish/camera/data/ (or absolute
+# paths). A fisheye camera without a record uses the raster pixels on the first
+# monotone branch of its distortion polynomial.
+camera_domains: []

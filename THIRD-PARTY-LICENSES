@@ -1,0 +1,152 @@
+GOFish third-party licenses
+===========================
+
+GOFish's own (Amazon-originated) files are licensed under the Creative Commons
+Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0, see LICENSE)
+and carry the header "Copyright Amazon.com, Inc. or its affiliates. All Rights
+Reserved. SPDX-License-Identifier: CC-BY-NC-4.0".
+
+This repository also includes third-party content, copied or modified. Each
+component keeps its original copyright notice and license: files derived from a
+component keep that component's license header, files modified by Amazon add a
+"Modifications Copyright Amazon.com, Inc. or its affiliates." line, and files
+derived from code under the Gaussian-Splatting License say so in their first
+lines. License texts:
+  - Apache License 2.0: LICENSES/Apache-2.0.txt (and gofish_ppisp/LICENSE)
+  - Gaussian-Splatting License: third_party/licenses/GAUSSIAN_SPLATTING_LICENSE.md
+  - MIT (Tanks and Temples toolbox): third_party/licenses/TANKS_AND_TEMPLES_LICENSE.md
+  - BSD-3-Clause (tiny-cuda-nn): LICENSE.txt of the third_party/tiny-cuda-nn submodule
+
+Which license applies to what you run
+-------------------------------------
+
+Non-commercial (Gaussian-Splatting License), because the code compiles or
+imports files derived from SOF, StopThePop, CoMe or GOF:
+  - the GOFish renderer extension (threedgut_tracer/src, built by
+    threedgut_tracer/setup_3dgut.py), which every GOFish render uses: training,
+    render.py with every --renderer (exact, exact-forward, realtime) and
+    threedgrut.benchmark.  It includes SOF's hierarchical sort
+    (sofMid8Hierarchy.inl, sofMid8Schedule.inl, sofMaximumResponseDepth.cuh) and
+    the SOF/CoMe paths of gutKBufferRenderer.cuh, rayPayload*.cuh,
+    shRadiativeGaussianParticles.cuh and splatRaster.cpp;
+  - training, train.py (threedgrut/trainer.py: SOF and CoMe losses);
+  - mesh extraction, mesh.py (gofish/mesh/, GOF and SOF; its extension
+    includes opacityField.cuh);
+  - the ScanNet++ mesh evaluator.
+So training, rendering and meshing GOFish, and the paper pipeline as a whole,
+are for non-commercial research and evaluation only.
+
+Without Gaussian-Splatting-License code (they neither import nor compile the files above;
+GOFish's own files CC BY-NC 4.0, NVIDIA-derived files Apache-2.0):
+  - gofish_ppisp/ (PPISP with the Wide-Angle Appearance Modeling factors,
+    gofish_ppisp/wide_angle.py) and gofish/appearance/;
+  - the Calibrated Mip Filtering components threedgrut/physical_mip.py with
+    threedgrut/physical_mip_csrc/, threedgut_tracer/view_observation_filter.py
+    and the footprint operator (footprint_shape_operator*);
+  - the camera-domain and calibration-table tools (gofish/camera/,
+    threedgut_tracer/kb_table/, gofish/tools/), dataset preparation (gofish/data/),
+    and the FIORD, FullCircle, ScanNet++ rendering and T&T rendering evaluators;
+  - the T&T geometry evaluator runs the MIT Tanks and Temples toolbox.
+
+Vendored or derived code
+------------------------
+
+3DGRUT / 3DGUT (NVIDIA)                                    Apache-2.0
+  https://github.com/nv-tlabs/3dgrut (base commit a37ef72)
+  threedgrut/, threedgut_tracer/, gofish/mesh/native/, configs/ (except
+  configs/geometry/, which is GOFish's own), train.py,
+  render.py, setup.py, pyproject.toml. License: LICENSES/Apache-2.0.txt.  Files modified by
+  Amazon carry a "Modifications Copyright Amazon.com, Inc. or its affiliates." line.
+
+PPISP (NVIDIA)                                             Apache-2.0
+  https://github.com/nv-tlabs/ppisp
+  Modified by the GOFish authors as above.
+  gofish_ppisp/ (vendored PPISP 1.3.0, renamed so it cannot shadow an installed ppisp; pooling and gating restricted to the calibrated camera
+  domain). License: gofish_ppisp/LICENSE.
+
+Kaolin (NVIDIA)                                            Apache-2.0
+  https://github.com/NVIDIAGameWorks/kaolin
+  gofish/mesh/marching_tetrahedra.py (marching tetrahedra, via GOF).
+
+Sorted Opacity Fields, SOF (Radl et al.)                   Gaussian-Splatting License
+  https://github.com/r4dl/SOF                              (Inria / MPII, non-commercial)
+  Ports of SOF's released hierarchical sort
+  (threedgut_tracer/include/3dgut/kernels/cuda/renderers/sofMid8Hierarchy.inl, its
+  scheduled form sofMid8Schedule.inl), of SOF's opacity-field, distortion,
+  depth-normal and normal-smoothness terms (threedgrut/trainer.py get_losses,
+  the same threedgut_tracer/ files as CoMe below and their copies
+  gofish/mesh/native/src/splatRaster.cpp and
+  gofish/mesh/native/include/3dgut/kernels/cuda/models/shRadiativeGaussianParticles.cuh), of its cooperative opacity-field
+  evaluation and of its mesh vertex filter (gofish/mesh/filters.py).
+
+Gaussian Opacity Fields, GOF (Yu et al.)                   Gaussian-Splatting License
+  https://github.com/autonomousvision/gaussian-opacity-fields (Inria / MPII, non-commercial)
+  Tetrahedral sites, tetrahedralization, opacity-field level set, shape and
+  cell filter (gofish/mesh/), Tanks and Temples evaluation packaging (gofish/eval/tnt/official).
+
+Tanks and Temples toolbox (Intel)                          MIT
+  https://github.com/isl-org/TanksAndTemples
+  gofish/eval/tnt/official/ (as packaged by GOF; registration.py adapted to Open3D 0.19).
+  License: third_party/licenses/TANKS_AND_TEMPLES_LICENSE.md.
+
+CoMe (Radl et al.)                                         Gaussian-Splatting License
+  https://github.com/r4dl/CoMe                             (Inria / MPII, non-commercial)
+  Port of CoMe's per-Gaussian confidence loss and normal-variance term
+  (threedgrut/trainer.py get_losses, the GOFISH_COME_CONFIDENCE paths of
+  threedgut_tracer/: rayPayload.cuh, rayPayloadBackward.cuh,
+  shRadiativeGaussianParticles.cuh, gutKBufferRenderer.cuh, splatRaster.cpp;
+  used by configs/apps/scannetpp.yaml), and
+  gofish/eval/scannetpp/mesh_metrics.py, which reproduces CoMe's released ScanNet++
+  mesh protocol (eval_SCN.py).
+
+StopThePop (Radl et al.)                                   Gaussian-Splatting License
+  https://github.com/r4dl/StopThePop                       (Inria / MPII, non-commercial)
+  The per-pixel hierarchical sort reached through SOF (see above).
+
+Methods re-implemented from their papers (no upstream code copied: a line-level
+comparison against the public Mip-Splatting and AbsGS repositories found only
+generic 3DGS densification lines that 3DGRUT also contains)
+  Mip-Splatting (Yu et al.): 3-D smoothing filter, re-derived for generic
+    cameras in threedgrut/physical_mip.py. Upstream code: Gaussian-Splatting
+    License. The 2-D filter comment in threedgut_tracer/ is upstream 3DGUT.
+  AbsGS (Ye et al.): absolute-gradient densification gate in
+    threedgrut/strategy/gs.py. Upstream code: Gaussian-Splatting License.
+
+GOFish's own work (Amazon)                                 CC-BY-NC-4.0
+  Wide-Angle Appearance Modeling (gofish_ppisp/wide_angle.py, gofish/appearance/), the
+  camera domains, the calibration table, Calibrated Mip Filtering, the evaluators
+  listed above, and the GOFish parts of the renderer and mesher, whose builds also
+  include the Gaussian-Splatting-License files above.
+
+Git submodule
+-------------
+
+tiny-cuda-nn (NVIDIA)                                      BSD-3-Clause
+  https://github.com/NVlabs/tiny-cuda-nn, third_party/tiny-cuda-nn
+  (commit 3c7931caab7b691c6f30dffe20952ed727d935b9). Headers only.
+
+External dependencies (installed separately, not redistributed)
+---------------------------------------------------------------
+
+Tetra-NeRF triangulation extension (tetranerf)             MIT
+  https://github.com/jkulhanek/tetra-nerf (as used by GOF)
+CGAL                                                       GPL-3.0 / LGPL-3.0
+fused-ssim                                                 MIT
+Slang (slangc), slangtorch                                 Apache-2.0 WITH LLVM-exception, Apache-2.0
+nvidia-ncore                                               Apache-2.0
+PyTorch, torchvision                                       BSD-3-Clause
+torchmetrics                                               Apache-2.0
+hydra-core                                                 MIT
+omegaconf                                                  BSD-3-Clause
+NumPy, SciPy, scikit-learn                                 BSD-3-Clause
+Pillow                                                     MIT-CMU (HPND)
+OpenCV (opencv-python)                                     Apache-2.0
+Open3D                                                     MIT
+trimesh                                                    MIT
+matplotlib                                                 Matplotlib License (PSF-based)
+rich, addict, piexif                                       MIT
+tensorboard                                                Apache-2.0
+LPIPS weights (via torchmetrics)                           BSD-2-Clause
+
+Datasets (FIORD, FullCircle, ScanNet++, Tanks & Temples) are distributed under their own
+terms and are not part of this repository.

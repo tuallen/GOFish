@@ -1,0 +1,74 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Modifications Copyright Amazon.com, Inc. or its affiliates.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+method: 3dgut
+pipeline_type: reference
+backward_pipeline_type: ${render.pipeline_type}Bwd
+particle_kernel_degree: 2
+particle_kernel_density_clamping: true
+particle_kernel_min_response: 0.0113
+particle_kernel_min_alpha: 0.00392156862745098  # 1/255
+particle_kernel_max_alpha: 0.99
+particle_radiance_sph_degree: 3
+primitive_type: instances
+min_transmittance: 0.0001
+max_consecutive_bvh_update: 15
+enable_normals: true  # normals feed the depth-normal and smoothness losses
+enable_hitcounts: true
+enable_kernel_timings: false
+particle_feature_half: false
+feature_output_half: false
+# Test-set renders only: 8-bit PNG quantization (half_up as upstream 3DGRUT,
+# half_even as numpy.rint) and the float association of the Wide-Angle
+# Appearance Modeling factors W_r = w(rho) and W_ff = exp(-a(u)) (sequential =
+# (rgb * W_r) * W_ff as in training, product = rgb * (W_r * W_ff)).
+png_rounding: half_up
+wa_order: sequential
+
+# GOFish camera model. Each switch reverts one component to stock 3DGUT.
+gofish:
+  # Full Field-of-View Rasterization: the calibrated camera domain (measured aperture or
+  # first monotone branch instead of the stock angular crop) ...
+  calibrated_domain: true
+  # ... and complete tile admission of every Gaussian whose support reaches a tile.
+  complete_admission: true
+  # Calibrated Mip Filtering: a view-independent 3D filter plus a per-view
+  # pixel footprint, recomputed for every view and never stored, with its
+  # opacity factor m that preserves the image integral.
+  scene_sensor_factorization: true
+  mip_filter_variance: 0.2  # px^2, Mip-Splatting 3-D filter
+  pixel_footprint_variance: 0.3  # px^2, per-view footprint gamma
+
+splat:
+  rect_bounding: true
+  tight_opacity_bounding: true
+  tile_based_culling: true
+  n_rolling_shutter_iterations: 5
+  ut_alpha: 1.0
+  ut_beta: 2.0
+  ut_kappa: 0.0
+  ut_in_image_margin_factor: 0.1
+  ut_require_all_sigma_points_valid: false
+  fine_grained_load_balancing: false
+  # SOF hierarchical sort (head / mid / tail windows).
+  global_z_order: true
+  hierarchical_sort: true
+  sof_mid8_hierarchy: true
+  sof_schedule: true  # run the SOF sort cascade once per forward pass
+  per_tile_depth: true
+  head_size: 4
+  mid_size: 8
+  tail_size: 64
+  k_buffer_size: 0
